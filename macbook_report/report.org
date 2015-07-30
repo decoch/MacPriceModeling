@@ -8,7 +8,7 @@
 
 ** 解析結果
 *** 製品間の価格
-[[file:/Users/akifumi.tominaga/DataScienceProject/MacPriceModeling/compare-prices-of-macbook.png]]
+[[file:./compare-prices-of-macbook.png]]
 - グラフについて
   - 縦軸:価格, 横軸:製品の種類
 - 結果

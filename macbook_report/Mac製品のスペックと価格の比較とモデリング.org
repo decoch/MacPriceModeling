@@ -1,0 +1,215 @@
+* Mac製品のスペックと価格の比較とモデリング
+
+** 要件確認
+1. 価格とスペックに関するグラフを作成。
+  1. 製品ラインナップの間の違いがわかりやすいように価格についてのグラフを作成する。
+  1. スペックについてもわかりやすくグラフにまとめる。
+2. MacBook製品の価格モデルを作成し、検証する。
+
+** 解析結果
+*** 製品ラインナップの間の違いがわかりやすいように価格についてのグラフを作成する。
+図-1\\
+[[file:./compare-prices-of-macbook.png]]
+- グラフについて
+  - 縦軸:価格, 横軸:製品の種類
+- 結果
+  - MacBookAir11inch, MacBookAir13inch, MacBookPro, MacBook, MacBookProRetinaの順番に価格が高くなっていると言える。
+- 解析方法について
+  - データから価格と製品情報を抽出して、商品のタイプごとに並べた。
+
+*** スペックについてもわかりやすくグラフにまとめる。
+図-2\\
+[[file:./macbook-radarchart.png]]
+- グラフについて
+  - チャートの外側に向かうほど良い値となる(詳しくは補足参照)
+- 結果
+  - グラフを参照
+- 解析方法について
+  - 各データごとに標準偏差値を出し、それぞれの商品の偏差値を元にグラフを作成した(e.g. MacBookはより軽いので、平均より外側になっている)
+  - 数値出ないデータは、解析できる形に変換をした。(詳しくは補足参照)
+
+*** MacBook製品の価格モデルを作成し、検証する。
+表-1 : モデル式
+| 変数名   | display_size | memory_size | cpu_clock | strage_type | strage_volume |
+|----------+--------------+-------------+-----------+-------------+---------------|
+| Estimate |       7718.4 |      6270.5 |    8897.6 |     56077.7 |         161.9 |
+| Pr       |        0.029 |       0.000 |     0.032 |       0.000 |         0.000 |
+
+表-2 : 式の評価
+| AIC    | 245.5 |
+| weight | 0.966 |
+
+- グラフについて
+  - 表-1はモデル式の係数についての重さ(Estimate)と、役に立っている変数かどうか(Pr)を表している。
+  - 表-2はモデル式のAICとweightを表している。(weight : これが大きいモデルの方が、より確からしいと言うことになる)
+- 結果
+  - モデル式について、上記表-1のEstimateが式の係数(重さ)となる。
+- 解析方法について
+  - データの整形後、AICを用いて重回帰分析を行った。
+  - 整形については、補足を参照。
+
+** 補足
+*** 製品間の価格
+ソースコード
+#+BEGIN_SRC R
+df <- first_data %>%
+  select(product, price) %>%
+  filter(product == "macbook" | product =="macbook_air" | product == "macbook_pro")
+
+# add product_detail and product_category to df
+price_df<-transform(df,product_detail=c(
+  "01_macbook_low",
+  "02_macbook_high",
+  "03_macbook_air_11inch_low",
+  "04_macbook_air_11inch_high",
+  "05_macbook_air_13inch_low",
+  "06_macbook_air_13inch_high",
+  "07_macbook_pro_13inch",
+  "08_macbook_pro_retina_13inch_low",
+  "09_macbook_pro_retina_13inch_middle",
+  "10_macbook_pro_retina_13inch_high",
+  "11_macbook_pro_retina_15inch_low",
+  "12_macbook_pro_retina_15inch_high"
+))
+
+price_df<-transform(price_df,product_category=c(
+  "macbook",
+  "macbook",
+  "macbook_air_11inch",
+  "macbook_air_11inch",
+  "macbook_air_13inch",
+  "macbook_air_13inch",
+  "macbook_pro_13inch",
+  "macbook_pro_retina_13inch",
+  "macbook_pro_retina_13inch",
+  "macbook_pro_retina_13inch",
+  "macbook_pro_retina_15inch",
+  "macbook_pro_retina_15inch"
+))
+
+# ggplot create data frame
+g <- ggplot(
+  price_df,                  # ggplot dataframe
+  aes (                      # ggplot set option
+    x = product_detail,
+    y = price,
+    fill = product_category  # color by product_category
+    )
+)
+
+# graph_design
+g <- g + theme(axis.text.x = element_text(angle = 45, hjust = 1)) # setting angle of x-axis text
+g <- g + geom_bar(
+  width = 0.8,               # bar width
+  stat = "identity"
+)
+
+g <- g + xlab("product_detail")                # name of x-axis
+g <- g + ylab("Price(yen)")                    # name of y-axis
+g <- g + ggtitle("Compare prices of MacBook")  # name of graph
+
+plot(g)
+#+END_SRC
+
+*** 製品間のスペック
+データを整形した後、偏差値に変換しレーダーチャートを作成した。
+
+**** データ整形箇所
+- size = 高さ + 幅 + 奥行き
+- gpu_benchmark gpuの型を参考に、ベンチマークスコアに変換(映像処理能力)
+参考サイト(http://www.videocardbenchmark.net/gpu_list.php)
+
+**** 補足
+size, weight についてのみ、値が低いほど偏差値が高くなっている。
+
+表-3 : データ
+| product                          | display_size |  size | weight | cpu_core_cnt | cpu_clock | memory_size | strage_volume | gpu_benchmark  |
+|----------------------------------+--------------+-------+--------+--------------+-----------+-------------+---------------+----------------|
+| macbook_low                      |           12 | 49.11 |   0.92 |            2 |       1.1 |           8 |           256 |            372 |
+| macbook_high                     |           12 | 49.11 |   0.92 |            2 |       1.2 |           8 |           512 |            372 |
+| macbook_air_11inch_low           |         11.6 |  50.9 |   1.08 |            2 |       1.6 |           4 |           128 |            778 |
+| macbook_air_11inch_low           |         11.6 |  50.9 |   1.08 |            2 |       1.6 |           4 |           256 |            778 |
+| macbook_air_13inch_low           |         13.3 |  56.9 |   1.35 |            2 |       1.6 |           4 |           128 |            778 |
+| macbook_air_11inch_low           |         13.3 |  56.9 |   1.35 |            2 |       1.6 |           4 |           256 |            778 |
+| macbook_pro_13inch               |         13.3 | 57.61 |   2.06 |            2 |       2.5 |           4 |           500 |            454 |
+| macbook_pro_retina_13inch_low    |         13.3 |  55.1 |   1.58 |            2 |       2.7 |           8 |           128 |            947 |
+| macbook_pro_retina_13inch_middle |         13.3 |  55.1 |   1.58 |            2 |       2.7 |           8 |           256 |            947 |
+| macbook_pro_retina_13inch_high   |         13.3 |  55.1 |   1.58 |            2 |       2.9 |           8 |           512 |            947 |
+| macbook_pro_retina_15inch_low    |         15.4 |  62.4 |   2.04 |            4 |       2.2 |          16 |           256 |           1191 |
+| macbook_pro_retina_15inch_high   |         15.4 |  62.4 |   2.04 |            4 |       2.5 |          16 |           512 |           1191 |
+
+表-4 : 偏差値に変換後
+| product                          | display_size |  size | weight | cpu_core_cnt | cpu_clock | memory_size | strage_volume | gpu_benchmark  |
+|----------------------------------+--------------+-------+--------+--------------+-----------+-------------+---------------+----------------|
+| macbook_low                      |        40.53 | 63.85 |  63.44 |        45.53 |     34.89 |       50.80 |         46.53 |          34.20 |
+| macbook_high                     |        40.53 | 63.85 |  63.44 |        45.53 |     36.54 |       50.80 |         63.52 |          34.20 |
+| macbook_air_11inch_low           |        37.24 | 59.73 |  59.50 |        45.53 |     43.13 |       41.16 |         38.03 |          49.39 |
+| macbook_air_11inch_low           |        37.24 | 59.73 |  59.50 |        45.53 |     43.13 |       41.16 |         46.53 |          49.39 |
+| macbook_air_13inch_low           |        51.23 | 45.92 |  52.84 |        45.53 |     43.13 |       41.16 |         38.03 |          49.39 |
+| macbook_air_11inch_low           |        51.23 | 45.92 |  52.84 |        45.53 |     43.13 |       41.16 |         46.53 |          49.39 |
+| macbook_pro_13inch               |        51.23 | 44.28 |  35.32 |        45.53 |     57.97 |       41.16 |         62.72 |          37.27 |
+| macbook_pro_retina_13inch_low    |        51.23 | 50.06 |  47.16 |        45.53 |     61.26 |       50.80 |         38.03 |          55.71 |
+| macbook_pro_retina_13inch_middle |        51.23 | 50.06 |  47.16 |        45.53 |     61.26 |       50.80 |         46.53 |          55.71 |
+| macbook_pro_retina_13inch_high   |        51.23 | 50.06 |  47.16 |        45.53 |     64.58 |       50.80 |         63.52 |          55.71 |
+| macbook_pro_retina_15inch_low    |        68.52 | 33.26 |  35.82 |        72.36 |     53.02 |       70.08 |         46.53 |          64.83 |
+| macbook_pro_retina_15inch_high   |        68.52 | 33.26 |  35.82 |        72.36 |     57.97 |       70.08 |         63.52 |          64.83 |
+
+
+
+*** Mac製品の価格モデル
+**** 整形について
+- 数値はそのまま解析
+- 数値で内値は、数値化できるならする
+  - gpuについて、ベンチマークサイトを参考にしベンチマークテストの結果に変更(macbook_pro_retina_15inch_highについては、値がないため、lowモデルの値を使用した。)
+  - 変更できないものは、より良い値を1、悪い値を0に変換をして用いた(e.g. 画面がretinaかどうか、ストレージのタイプはflashかどうか) 
+
+**** 結果一覧
+図-3 : AIC昇順\\
+[[file:./aic-list.png]]
+
+図-4 : モデル式のsummary\\
+file:./summary-of-model.png
+
+ソースコード
+#+BEGIN_SRC R
+## info
+##============================================
+library(MuMIn)
+
+## setting data
+##============================================
+tmp_df <- first_data %>%
+  select(product, price, display_type, display_size, memory_size, cpu_core_cnt, cpu_clock, strage_type, strage_volume) %>%
+  filter(product == "macbook" | product =="macbook_air" | product == "macbook_pro")
+
+tmp_df$display_type <- ifelse(tmp_df$display_type=="retina", 1, 0)
+tmp_df$strage_type <- ifelse(tmp_df$strage_type=="flash", 1, 0)
+tmp_df <- transform(tmp_df,gpu_bentchmark=c(
+  372,
+  372,
+  778,
+  778,
+  778,
+  778,
+  454,
+  947,
+  947,
+  947,
+  1191,
+  1191
+))
+
+task2_df <- tmp_df
+
+## modeling
+##============================================
+# model <- lm(price~display_type + display_size + memory_size + cpu_core_cnt + cpu_clock + strage_type + strage_volume + gpu_bentchmark, data=task2_df)
+# 上記データの結果から変数値を減らした
+model <- lm(price~display_size + memory_size + cpu_clock + strage_type + strage_volume, data=task2_df)
+summary(model)
+AIC(model)
+kekka.AIC<-dredge(model,rank="AIC")
+ans_model <- kekka.AIC[1]
+ans_model <- lm(price ~ display_size + memory_size + cpu_clock + 
+                  strage_type + strage_volume, data = task2_df)
+#+END_SRC

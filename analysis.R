@@ -2,15 +2,18 @@
 ## info
 ##============================================
 
-## result
+## install package
 ##============================================
+install.packages("MuMIn") # require only first
+install.packages("ggplot2")
+install.packages("dplyr")
 
 ## setting
 ##============================================
 library(ggplot2)
 library(dplyr)
 
-first_data <- read.csv(file = "/Users/akifumi.tominaga/DataScienceProject/MacPriceModeling/data/mac_price_150717.csv", fileEncoding = "utf-8") # import
+first_data <- read.csv(file = "./data/mac_price_150717.csv", fileEncoding = "utf-8") # import
 
 ##============================================
 ## first task
@@ -81,7 +84,6 @@ plot(g)
 ## info
 ##============================================
 # 参考サイト(http://logics-of-blue.com/%E3%83%A2%E3%83%87%E3%83%AB%E9%81%B8%E6%8A%9E_%E5%AE%9F%E8%B7%B5%E7%B7%A8/)
-# install.packages("MuMIn") # require only first
 library(MuMIn)
 
 ## setting data
@@ -111,12 +113,12 @@ task2_df <- tmp_df
 
 ## modeling
 ##============================================
-model <- lm(price~display_type + display_size + memory_size + cpu_core_cnt + cpu_clock + strage_type + strage_volume + gpu_bentchmark, data=task2_df)
+# model <- lm(price~display_type + display_size + memory_size + cpu_core_cnt + cpu_clock + strage_type + strage_volume + gpu_bentchmark, data=task2_df)
+# model <- lm(price~display_type + display_size + memory_size + cpu_core_cnt + cpu_clock + strage_type + strage_volume, data=task2_df)
 model <- lm(price~display_size + memory_size + cpu_clock + strage_type + strage_volume, data=task2_df)
-# model <- lm(price~display_size + memory_size + cpu_clock + strage_type + strage_volume, data=task2_df)
-# model <- lm(price~display_size + memory_size + cpu_core_cnt + cpu_clock + strage_volume + gpu_bentchmark, data=task2_df)
 summary(model)
 AIC(model)
+options(na.action = "na.fail")
 kekka.AIC<-dredge(model,rank="AIC")
 kekka.AIC
 model
