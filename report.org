@@ -1,21 +1,48 @@
-##============================================
-## info
-##============================================
+* Mac製品のスペックと価格の比較とモデリング
 
-## result
-##============================================
+** 要件確認
+1. 価格とスペックに関するグラフを作成。
+  1. 製品ラインナップの間の違いがわかりやすいように価格についてのグラフを作成する。
+  1. スペックについてもわかりやすくグラフにまとめてる。
+2. MacBook製品の価格モデルを作成し、検証する。
 
-## setting
-##============================================
-library(ggplot2)
-library(dplyr)
+** 解析結果
+*** 製品間の価格
+[[file:/Users/akifumi.tominaga/DataScienceProject/MacPriceModeling/compare-prices-of-macbook.png]]
+- グラフについて
+  - 縦軸:価格, 横軸:製品の種類
+- 結果
+  - MacBookAir11inch, MacBookAir13inch, MacBookPro, MacBook, MacBookProRetinaの順場に価格が高くなっていると言える。
+- 解析方法について
+  - データから価格と製品情報を抽出して、商品のタイプごとに並べた。
 
-first_data <- read.csv(file = "/Users/akifumi.tominaga/DataScienceProject/MacPriceModeling/data/mac_price_150717.csv", fileEncoding = "utf-8") # import
+*** 製品間のスペック
+[[file:/Users/akifumi.tominaga/DataScienceProject/MacPriceModeling/macbook-radarchart.png]]
+- グラフについて
+  - チャートの外側に向かうほど良い値となる。
+  - (e.g. 性能は高い方が外側, 重さは軽いほうが外側)
+- 結果
+  - グラフを参照
+- 解析方法について
+  - 各データごとに標準偏差値を出し、それぞれの商品の偏差値を元にグラフを作成した。\\
+  (e.g. MacBookは非偏差値より軽いので、平均より外側になっている)\\
+  - 数値出ないデータは、解析できる形に変換をした。(補足資料参照)
 
-##============================================
-## first task
-##============================================
-# df
+*** MacBook製品の価格モデル
+
+| 変数名   | display_size | mamery_size | cpu_clock | strage_type | strage_volume |
+|----------+--------------+-------------+-----------+-------------+---------------|
+| Estimate |       7718.4 |      6270.5 |    8897.6 |     56077.7 |         161.9 |
+| Pr       |        0.029 |       0.000 |     0.032 |       0.000 |         0.000 |
+
+式の評価
+| AIC    | 245.5 |
+| weight | 0.966 |
+
+** 補足
+*** 製品間の価格
+
+#+BEGIN_SRC R
 df <- first_data %>%
   select(product, price) %>%
   filter(product == "macbook" | product =="macbook_air" | product == "macbook_pro")
@@ -73,15 +100,16 @@ g <- g + ylab("Price(yen)")                    # name of y-axis
 g <- g + ggtitle("Compare prices of MacBook")  # name of graph
 
 plot(g)
+#+END_SRC
 
-##============================================
-## task2
-##============================================
+*** 製品間のスペック
 
+*** Mac製品の価格モデル
+
+- ソースコード
+#+BEGIN_SRC R
 ## info
 ##============================================
-# 参考サイト(http://logics-of-blue.com/%E3%83%A2%E3%83%87%E3%83%AB%E9%81%B8%E6%8A%9E_%E5%AE%9F%E8%B7%B5%E7%B7%A8/)
-# install.packages("MuMIn") # require only first
 library(MuMIn)
 
 ## setting data
@@ -111,19 +139,17 @@ task2_df <- tmp_df
 
 ## modeling
 ##============================================
-model <- lm(price~display_type + display_size + memory_size + cpu_core_cnt + cpu_clock + strage_type + strage_volume + gpu_bentchmark, data=task2_df)
+# model <- lm(price~display_type + display_size + memory_size + cpu_core_cnt + cpu_clock + strage_type + strage_volume + gpu_bentchmark, data=task2_df)
+# 上記データの結果から変数値を減らした
 model <- lm(price~display_size + memory_size + cpu_clock + strage_type + strage_volume, data=task2_df)
-# model <- lm(price~display_size + memory_size + cpu_clock + strage_type + strage_volume, data=task2_df)
-# model <- lm(price~display_size + memory_size + cpu_core_cnt + cpu_clock + strage_volume + gpu_bentchmark, data=task2_df)
 summary(model)
 AIC(model)
 kekka.AIC<-dredge(model,rank="AIC")
-kekka.AIC
-model
-
 ans_model <- kekka.AIC[1]
-
 ans_model <- lm(price ~ display_size + memory_size + cpu_clock + 
                   strage_type + strage_volume, data = task2_df)
-ans_model
-plot(ans_model)
+#+END_SRC
+
+
+
+
