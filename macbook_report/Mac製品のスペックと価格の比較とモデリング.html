@@ -4,10 +4,10 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
 <title>Mac製品のスペックと価格の比較とモデリング</title>
-<!-- 2015-07-31 Fri 00:37 -->
+<!-- 2015-07-31 Fri 09:32 -->
 <meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta  name="generator" content="Org-mode" />
-<meta  name="author" content="Akifumi Tominaga" />
+<meta  name="author" content="冨永 晃史" />
 <style type="text/css">
  <!--/*--><![CDATA[/*><!--*/
   .title  { text-align: center; }
@@ -366,7 +366,12 @@ for the JavaScript code in this tag.
 </p>
 <div class="org-src-container">
 
-<pre class="src src-R">df &lt;- first_data %&gt;%
+<pre class="src src-R">library(ggplot2)
+library(dplyr)
+
+first_data &lt;- read.csv(file = "./data/mac_price_150717.csv", fileEncoding = "utf-8")
+
+df &lt;- first_data %&gt;%
   select(product, price) %&gt;%
   filter(product == "macbook" | product =="macbook_air" | product == "macbook_pro")
 
@@ -838,7 +843,7 @@ size, weight についてのみ、値が低いほど偏差値が高くなって�
 </li>
 <li>数値で内値は、数値化できるならする
 <ul class="org-ul">
-<li>gpuについて、ベンチマークサイトを参考にしベンチマークテストの結果に変更(macbook<sub>pro</sub><sub>retina</sub><sub>15inch</sub><sub>highについては、値がないため、lowモデルの値を使用した。</sub>)
+<li>gpuについて、ベンチマークサイトを参考にしベンチマークテストの結果に変更(macbook<sub>pro</sub><sub>retina</sub><sub>15inch</sub><sub>high</sub> については、値がないため、lowモデルの値を使用した。)
 </li>
 <li>変更できないものは、より良い値を1、悪い値を0に変換をして用いた(e.g. 画面がretinaかどうか、ストレージのタイプはflashかどうか) 
 </li>
@@ -864,12 +869,8 @@ size, weight についてのみ、値が低いほど偏差値が高くなって�
 </p>
 <div class="org-src-container">
 
-<pre class="src src-R">## info
-##============================================
-library(MuMIn)
+<pre class="src src-R">library(MuMIn)
 
-## setting data
-##============================================
 tmp_df &lt;- first_data %&gt;%
   select(product, price, display_type, display_size, memory_size, cpu_core_cnt, cpu_clock, strage_type, strage_volume) %&gt;%
   filter(product == "macbook" | product =="macbook_air" | product == "macbook_pro")
@@ -913,8 +914,8 @@ ans_model &lt;- lm(price ~ display_size + memory_size + cpu_clock +
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="author">Author: Akifumi Tominaga</p>
-<p class="date">Created: 2015-07-31 Fri 00:37</p>
+<p class="author">Author: 冨永 晃史</p>
+<p class="date">Created: 2015-07-31 Fri 09:32</p>
 <p class="creator"><a href="http://www.gnu.org/software/emacs/">Emacs</a> 24.5.1 (<a href="http://orgmode.org">Org</a> mode 8.2.10)</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>

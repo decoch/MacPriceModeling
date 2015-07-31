@@ -52,6 +52,11 @@
 *** 製品間の価格
 ソースコード
 #+BEGIN_SRC R
+library(ggplot2)
+library(dplyr)
+
+first_data <- read.csv(file = "./data/mac_price_150717.csv", fileEncoding = "utf-8")
+
 df <- first_data %>%
   select(product, price) %>%
   filter(product == "macbook" | product =="macbook_air" | product == "macbook_pro")
@@ -160,7 +165,7 @@ size, weight についてのみ、値が低いほど偏差値が高くなって�
 **** 整形について
 - 数値はそのまま解析
 - 数値で内値は、数値化できるならする
-  - gpuについて、ベンチマークサイトを参考にしベンチマークテストの結果に変更(macbook_pro_retina_15inch_highについては、値がないため、lowモデルの値を使用した。)
+  - gpuについて、ベンチマークサイトを参考にしベンチマークテストの結果に変更(macbook_pro_retina_15inch_high については、値がないため、lowモデルの値を使用した。)
   - 変更できないものは、より良い値を1、悪い値を0に変換をして用いた(e.g. 画面がretinaかどうか、ストレージのタイプはflashかどうか) 
 
 **** 結果一覧
@@ -172,12 +177,8 @@ file:./summary-of-model.png
 
 ソースコード
 #+BEGIN_SRC R
-## info
-##============================================
 library(MuMIn)
 
-## setting data
-##============================================
 tmp_df <- first_data %>%
   select(product, price, display_type, display_size, memory_size, cpu_core_cnt, cpu_clock, strage_type, strage_volume) %>%
   filter(product == "macbook" | product =="macbook_air" | product == "macbook_pro")
